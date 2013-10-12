@@ -8,6 +8,7 @@
 DynAsm::DynAsm(const void *actionlist) {
 	dasm_init(this, 1);
 	dasm_setup(this, actionlist);
+	growPc(1);
 }
 
 void *DynAsm::build() {
@@ -46,3 +47,10 @@ bool DynAsm::destroy(void *code) {
 	return (0 != VirtualFree(mem, 0, MEM_RELEASE));
 }
 
+int DynAsm::getPc(size_t index) {
+	return dasm_getpclabel(this, static_cast<unsigned int>(index));
+}
+
+void DynAsm::growPc(size_t newMaxPc) {
+	dasm_growpc(this, static_cast<unsigned int>(newMaxPc));
+}

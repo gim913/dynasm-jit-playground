@@ -22,6 +22,9 @@ public:
 	// destroy code
 	bool destroy(void *code);
 
+	int getPc(size_t index);
+	void growPc(size_t nVal);
+
 	struct dasm_State *D;
 };
 

@@ -3,8 +3,8 @@ set DYNASMDIR=/projects/LuaJIT-2.0.2/dynasm
 set DASMFLAGS=-D WIN -D JIT -D FFI
 set LUA=/projects/LuaJIT-2.0.2/src/luajit.exe
 set OBJDIR=../obj/
-set CFLAGS=/nologo /c /EHsc /MD /O2 /W3 /I%DYNASMDIR% /Tp
-set LDFLAGS=/nologo
+set CFLAGS=/nologo /c /Zi /EHsc /MD /O2 /W3 /I%DYNASMDIR% /Tp
+set LDFLAGS=/nologo /DEBUG
 set CC=cl.exe
 rem stupid link issue
 set LINK=

@@ -32,6 +32,7 @@ int main(int argc, char *argv[]) {
 		int ret = fptr();
 	
 		std::cout << "code returend value: " << ret << std::endl;
+		std::cout << "last pc val: " << da.getPc(0) << std::endl;
 		da.destroy(fptr);
 
 	} catch(std::exception& e) {
