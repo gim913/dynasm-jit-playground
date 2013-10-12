@@ -1,4 +1,4 @@
-dynasm-jit-playground
-=====================
+dynasm jit playground
+=======
 
-Simple examples using dynasm
+Playing around with dynasm based jits
