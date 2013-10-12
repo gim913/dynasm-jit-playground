@@ -1,4 +1,8 @@
+#ifdef _WIN64
+#include "examp1_x64.h"
+#elif _WIN32
 #include "examp1_x86.h"
+#endif
 
 #include <iostream>
 
@@ -8,6 +12,12 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	int num = atoi(argv[1]);
+
+#ifdef _WIN64
+	std::cout << "compiled for x64" << std::endl;
+#elif _WIN32
+	std::cout << "compiled for x86" << std::endl;
+#endif
 
 	DynAsm state_buf;
 	DynAsm *state = &state_buf;
