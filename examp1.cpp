@@ -1,3 +1,5 @@
+#include "dynasm-helper.h"
+
 #ifdef _WIN64
 #include "examp1_x64.h"
 #elif _WIN32
@@ -19,20 +21,18 @@ int main(int argc, char *argv[]) {
 	std::cout << "compiled for x86" << std::endl;
 #endif
 
-	DynAsm state_buf;
-	DynAsm *state = &state_buf;
 	try {
-		jitInit(state, actions);
+		DynAsm da(actions);
 
-		dynasmGenerator(state, num);
+		dynasmGenerator(&da, num);
   
-		int (*fptr)() = reinterpret_cast<int(*)()>( jitCode(state) );
+		int (*fptr)() = reinterpret_cast<int(*)()>( da.build() );
 
 		// Call the JIT-ted function.
 		int ret = fptr();
 	
 		std::cout << "code returend value: " << ret << std::endl;
-		free_jitcode(fptr);
+		da.destroy(fptr);
 
 	} catch(std::exception& e) {
 		std::cout << "exception occured" << std::endl;

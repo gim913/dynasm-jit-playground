@@ -8,5 +8,6 @@ void dynasmGenerator(Dst_DECL, int num)
 		// dasm understandable code is here
 		| mov eax, num
 		| inc eax
+		| shl eax, 1
 		| ret
 }

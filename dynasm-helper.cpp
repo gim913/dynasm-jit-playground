@@ -1,33 +1,18 @@
-#include <memory>
-#include <stdexcept>
-
-// I'm gonna define those so later it'll be possible to nicely wrap
-// dynasm in class
-#define Dst       state
-#define Dst_DECL  DynAsm *Dst
-#define Dst_REF   (state->D)
-#define DASM_FDEF static
-
-struct dasm_State;
-
-class DynAsm {
-public:
-	struct dasm_State *D;
-};
-
-#include "dasm_proto.h"
+#include "dynasm-helper.h"
 #include "dasm_x86.h"
 
+#include <memory>
+#include <stdexcept>
 #include <windows.h>
 
-void jitInit(Dst_DECL, const void *actionlist) {
-	dasm_init(Dst, 1);
-	dasm_setup(Dst, actionlist);
+DynAsm::DynAsm(const void *actionlist) {
+	dasm_init(this, 1);
+	dasm_setup(this, actionlist);
 }
 
-void *jitCode(Dst_DECL) {
+void *DynAsm::build() {
 	size_t size;
-	int dasm_status = dasm_link(Dst, &size);
+	int dasm_status = dasm_link(this, &size);
 	if (dasm_status != DASM_S_OK) {
 		throw std::runtime_error("link failed");
 		return 0;
@@ -42,8 +27,8 @@ void *jitCode(Dst_DECL) {
 	*(size_t*)mem = size;
 	void *ret = (char*)mem + sizeof(size_t);
 
-	dasm_encode(Dst, ret);
-	dasm_free(Dst);
+	dasm_encode(this, ret);
+	dasm_free(this);
 
 	DWORD oldProt=0;
 	BOOL st = VirtualProtect(mem, size, PAGE_EXECUTE_READ, &oldProt);
@@ -56,10 +41,8 @@ void *jitCode(Dst_DECL) {
 	return ret;
 }
 
-bool free_jitcode(void *code) {
+bool DynAsm::destroy(void *code) {
 	void *mem = (char*)code - sizeof(size_t);
 	return (0 != VirtualFree(mem, 0, MEM_RELEASE));
 }
-
-#include JIT
 

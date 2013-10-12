@@ -17,9 +17,10 @@ echo %LUA% %DYNASMDIR%/dynasm.lua %DASMFLAGS% examp1_%PLAT%.dasc
 %LUA% %DYNASMDIR%/dynasm.lua %DASMFLAGS% examp1_%PLAT%.dasc |sed "s/^# /#line /" > examp1_%PLAT%.h
 
 
-echo %CC% %CFLAGS% %CPPFLAGS% dynasm-helper.cpp -DJIT=\"examp1.cpp\"
-%CC% %CFLAGS% %CPPFLAGS% dynasm-helper.cpp -DJIT=\"examp1.cpp\"
+echo %CC% %CFLAGS% %CPPFLAGS% dynasm-helper.cpp
+%CC% %CFLAGS% %CPPFLAGS% dynasm-helper.cpp
+%CC% %CFLAGS% %CPPFLAGS% examp1.cpp
 
-%REALLINK% %LDFLAGS% /out:examp1_%PLAT%.exe dynasm-helper.obj
+%REALLINK% %LDFLAGS% /out:examp1_%PLAT%.exe dynasm-helper.obj examp1.obj
 
 @echo on
