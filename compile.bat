@@ -15,11 +15,9 @@ echo %LUA% %DYNASMDIR%/dynasm.lua %DASMFLAGS% examp1_x86.dasc
 %LUA% %DYNASMDIR%/dynasm.lua %DASMFLAGS% examp1_x86.dasc |sed "s/^# /#line /" > examp1_x86.h
 
 
-echo %CC% %CFLAGS% %CPPFLAGS% dynasm-helper.cpp -DJIT=\"examp1_x86.h\"
-%CC% %CFLAGS% %CPPFLAGS% dynasm-helper.cpp -DJIT=\"examp1_x86.h\"
+echo %CC% %CFLAGS% %CPPFLAGS% dynasm-helper.cpp -DJIT=\"examp1.cpp\"
+%CC% %CFLAGS% %CPPFLAGS% dynasm-helper.cpp -DJIT=\"examp1.cpp\"
 
 %REALLINK% %LDFLAGS% /out:examp1_x86.exe dynasm-helper.obj
-
-if exist examp1_x86.exe.manifest %MT% -manifest examp1_x86.exe.manifest -outputresource:examp1_x86.exe
 
 @echo on
