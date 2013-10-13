@@ -33,3 +33,13 @@ public:
 
 #include "dasm_proto.h"
 
+class Timer
+{
+public:
+	typedef double TickType;
+
+	static TickType freq;
+	static bool init();
+	static TickType tick();
+};
+

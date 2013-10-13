@@ -62,3 +62,28 @@ int DynAsm::getPc(size_t index) {
 void DynAsm::growPc(size_t newMaxPc) {
 	dasm_growpc(this, static_cast<unsigned int>(newMaxPc));
 }
+
+bool Timer::init() {
+#if !defined(LINUX)
+	ULONGLONG u64freq;
+	if(! QueryPerformanceFrequency((LARGE_INTEGER*)&u64freq))
+		return false;
+	freq = 1.0 / u64freq;
+	return true;
+#else
+	return false;
+#endif
+}
+Timer::TickType Timer::tick() {
+#if !defined(LINUX)
+	DWORD_PTR prev = SetThreadAffinityMask(GetCurrentThread(), 0);
+	ULONGLONG v;
+	QueryPerformanceCounter((LARGE_INTEGER*)&v);
+	SetThreadAffinityMask(GetCurrentThread(), prev);
+	return v*freq;
+#else
+	return 0;
+#endif;
+}
+Timer::TickType Timer::freq = 0;
+

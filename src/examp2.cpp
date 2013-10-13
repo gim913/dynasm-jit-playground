@@ -6,6 +6,8 @@
 #include "examp2_x86.h"
 #endif
 
+#include "timer.h"
+
 #include <iostream>
 #include <stdint.h>
 
@@ -54,7 +56,7 @@ int main(int argc, char *argv[]) {
 	std::cout << "compiled for x86" << std::endl;
 #endif
 
-	const size_t dataSize = 0x100000;
+	const size_t dataSize = 100*1024*1024;
 	void* dataBlock=malloc(dataSize);
 	char* temp=(char*)dataBlock;
 	uint64_t x = 0x416947;
@@ -74,16 +76,22 @@ int main(int argc, char *argv[]) {
 		uint32_t (__fastcall * fptr)(void*,size_t) = reinterpret_cast<uint32_t(__fastcall *)(void*, size_t)>( da.build() );
 #endif
 
-		// Call the JIT-ted function.
+		Timer::init();
+
+		auto t1 = Timer::tick();
 		uint32_t real = crcSlicing4(dataBlock, dataSize);
+		auto t2 = Timer::tick();
 #ifdef _WIN64
 		uint32_t ret = fptr(dataBlock, dataSize, crcTab);
 #elif _WIN32
 		uint32_t ret = fptr(dataBlock, dataSize);
 #endif
+		auto t3 = Timer::tick();
 	
-		std::cout << "code returend value: " << ret << std::endl;
-		std::cout << "crc  returend value: " << real << std::endl;
+		t3 -= t2;
+		t2 -= t1;
+		std::cout << "jit returend value: " << ret << " time: " << t3 << " spd: " << (dataSize/t3 / 1024 / 1024) << " Mb/s" << std::endl;
+		std::cout << "c   returend value: " << real << " time: " << t2 << " spd: " << (dataSize/t2 / 1024 / 1024) << " Mb/s" << std::endl;
 		std::cout << "last pc val: " << da.getPc(0) << std::endl;
 		da.destroy(fptr);
 
