@@ -12,15 +12,17 @@
 |.define CNT, rcx // clobber
 |.define TBL, rdi
 |.define CRC, rax // clobber, must be eax
-|.define REG1, rbx
-|.define REG2, rdx  // clobber
-|.define REG3, rbp
+|.define CRCd, eax // clobber, must be eax
+|.define REG1, rdx
+|.define REG2, r8  // clobber
+|.define REG3, r9  // clobber
+|.define TRAN, ebx // clobber
 |
 |.macro saveregs
-|  push rbp; push rbx; push rdi; push rsi
+|  push rbx; push rdi; push rsi
 |.endmacro 
 |.macro restoreregs
-|  pop rsi; pop rdi; pop rbx; pop rbp
+|  pop rsi; pop rdi; pop rbx;
 |.endmacro
 
 #include <iostream>
@@ -40,22 +42,22 @@ void dynasmGenerator(Dst_DECL)
 | not CRC
 |
 |1:
-| xor CRC, [PTR]
+| xor CRCd, dword [PTR]
 | mov REG1, CRC
 | and REG1, 0xff
-| mov REG1, qword [TBL + REG1*4 + 256*3*4]
+| mov TRAN, dword [TBL + REG1*4 + 256*3*4]
 | mov REG2, CRC
 | shr REG2, 8
 | and REG2, 0xff
-| xor REG1, qword [TBL + REG2*4 + 256*2*4]
+| xor TRAN, dword [TBL + REG2*4 + 256*2*4]
 | mov REG3, CRC
 | shr REG3, 16
 | and REG3, 0xff
-| xor REG1, qword [TBL + REG3*4 + 256*1*4]
+| xor TRAN, dword [TBL + REG3*4 + 256*1*4]
 | shr CRC, 24
 | and CRC, 0xff
-| mov CRC, qword [TBL + CRC*4]
-| xor CRC, REG1
+| mov CRCd, dword [TBL + CRC*4]
+| xor CRCd, TRAN
 | add PTR, 4
 | dec CNT
 | jnz <1
