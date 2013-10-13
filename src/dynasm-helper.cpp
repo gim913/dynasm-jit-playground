@@ -10,9 +10,7 @@ DynAsm::DynAsm(const void *actionlist, size_t globCount /* = 0 */)
 {
 	dasm_init(this, 1);
 	m_glob = 0;
-	if (globCount) {
-		dasm_setupglobal(this, &m_glob, globCount); 
-	}
+	dasm_setupglobal(this, &m_glob, globCount); 
 	dasm_setup(this, actionlist);
 	growPc(1);
 }
