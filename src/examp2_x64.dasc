@@ -1,13 +1,65 @@
 // DynASM directives.
 |.arch x64
 |.section code
+|.globals GLOB_
 |.actionlist actions
+|
+|.define INBUF, rcx 
+|.define INSIZE, rdx
+|.define INTBL, r8
+|
+|.define PTR, rsi
+|.define CNT, rcx // clobber
+|.define TBL, rdi
+|.define CRC, rax // clobber, must be eax
+|.define REG1, rbx
+|.define REG2, rdx  // clobber
+|.define REG3, rbp
+|
+|.macro saveregs
+|  push rbp; push rbx; push rdi; push rsi
+|.endmacro 
+|.macro restoreregs
+|  pop rsi; pop rdi; pop rbx; pop rbp
+|.endmacro
+
+#include <iostream>
+
+extern unsigned int crcTab[4*256];
 
 void dynasmGenerator(Dst_DECL)
 {
-		// dasm understandable code is here
-		| mov rax, num
-		| inc rax
-        | shl rax, 1
-		| ret
+// dasm understandable code is here
+| saveregs
+|
+| mov PTR, INBUF
+| mov CNT, INSIZE
+| xor CRC, CRC
+| shr CNT, 2
+| mov TBL, INTBL
+| not CRC
+|
+|1:
+| xor CRC, [PTR]
+| mov REG1, CRC
+| and REG1, 0xff
+| mov REG1, qword [TBL + REG1*4 + 256*3*4]
+| mov REG2, CRC
+| shr REG2, 8
+| and REG2, 0xff
+| xor REG1, qword [TBL + REG2*4 + 256*2*4]
+| mov REG3, CRC
+| shr REG3, 16
+| and REG3, 0xff
+| xor REG1, qword [TBL + REG3*4 + 256*1*4]
+| shr CRC, 24
+| and CRC, 0xff
+| mov CRC, qword [TBL + CRC*4]
+| xor CRC, REG1
+| add PTR, 4
+| dec CNT
+| jnz <1
+| not CRC
+| restoreregs
+| ret
 }

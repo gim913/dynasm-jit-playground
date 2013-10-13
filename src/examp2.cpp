@@ -68,11 +68,19 @@ int main(int argc, char *argv[]) {
 
 		dynasmGenerator(&da);
   
+#ifdef _WIN64
+		uint32_t (__fastcall * fptr)(void*,size_t,void*) = reinterpret_cast<uint32_t(__fastcall *)(void*, size_t,void*)>( da.build() );
+#elif _WIN32
 		uint32_t (__fastcall * fptr)(void*,size_t) = reinterpret_cast<uint32_t(__fastcall *)(void*, size_t)>( da.build() );
+#endif
 
 		// Call the JIT-ted function.
 		uint32_t real = crcSlicing4(dataBlock, dataSize);
+#ifdef _WIN64
+		uint32_t ret = fptr(dataBlock, dataSize, crcTab);
+#elif _WIN32
 		uint32_t ret = fptr(dataBlock, dataSize);
+#endif
 	
 		std::cout << "code returend value: " << ret << std::endl;
 		std::cout << "crc  returend value: " << real << std::endl;
