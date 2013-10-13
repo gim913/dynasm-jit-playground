@@ -1,13 +1,61 @@
 // DynASM directives.
 |.arch x86
 |.section code
+|.globals GLOB_
 |.actionlist actions
+|
+|.define INBUF, ecx 
+|.define INSIZE, edx
+|
+|.define PTR, esi
+|.define CNT, ecx // clobber
+|.define TBL, edi
+|.define CRC, eax // clobber, must be eax
+|.define R1, ebx
+|.define R2, edx  // clobber
+|.define R3, ebp
+|
+|.macro saveregs
+|  push ebp; push ebx; push edi; push esi
+|.endmacro 
+|.macro restoreregs
+|  pop esi; pop edi; pop ebx; pop ebp
+|.endmacro
 
-void dynasmGenerator(Dst_DECL, int num)
+extern unsigned int crcTab[4*256];
+
+void dynasmGenerator(Dst_DECL)
 {
-		// dasm understandable code is here
-		| mov eax, num
-		| inc eax
-		| shl eax, 1
-		| ret
+// dasm understandable code is here
+| saveregs
+|
+| mov PTR, INBUF
+| mov CNT, INSIZE
+| xor CRC, CRC
+| shr CNT, 2
+| mov TBL, crcTab
+| not CRC
+|
+|1:
+| xor CRC, [PTR]
+| mov R1, CRC
+| and R1, 0xff
+| mov R1, dword [TBL + R1*4 + 256*3*4]
+| mov R2, CRC
+| shr R2, 8
+| and R2, 0xff
+| xor R1, dword [TBL + R2*4 + 256*2*4]
+| mov R3, CRC
+| shr R3, 16
+| and R3, 0xff
+| xor R1, dword [TBL + R3*4 + 256*1*4]
+| shr CRC, 24
+| mov CRC, dword [TBL + CRC*4]
+| xor CRC, R1
+| add PTR, 4
+| dec CNT
+| jnz <1
+| not CRC
+| restoreregs
+| ret
 }

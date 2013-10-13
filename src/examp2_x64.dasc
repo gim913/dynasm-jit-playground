@@ -3,7 +3,7 @@
 |.section code
 |.actionlist actions
 
-void dynasmGenerator(Dst_DECL, int num)
+void dynasmGenerator(Dst_DECL)
 {
 		// dasm understandable code is here
 		| mov rax, num
