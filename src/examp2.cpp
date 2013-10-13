@@ -6,8 +6,6 @@
 #include "examp2_x86.h"
 #endif
 
-#include "timer.h"
-
 #include <iostream>
 #include <stdint.h>
 
