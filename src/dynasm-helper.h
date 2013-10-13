@@ -4,7 +4,7 @@
 // dynasm in class
 #define Dst       state
 #define Dst_DECL  DynAsm *Dst
-#define Dst_REF   (state->D)
+#define Dst_REF   (state->m_state)
 // commented as dasm_put and Co. will reside in dynasm-helper.cpp now
 //#define DASM_FDEF static
 
@@ -14,7 +14,8 @@ class DynAsm {
 	DynAsm(const DynAsm&);
 	DynAsm& operator=(const DynAsm&);
 public:
-	DynAsm(const void *actionlist);
+	DynAsm(const void *actionlist, size_t globCount = 0);
+	~DynAsm();
 
 	// allocate executable memory, build code
 	void *build();
@@ -25,7 +26,9 @@ public:
 	int getPc(size_t index);
 	void growPc(size_t nVal);
 
-	struct dasm_State *D;
+	struct dasm_State *m_state;
+	size_t m_globCount;
+	void* m_glob;
 };
 
 #include "dasm_proto.h"

@@ -5,10 +5,19 @@
 #include <stdexcept>
 #include <windows.h>
 
-DynAsm::DynAsm(const void *actionlist) {
+DynAsm::DynAsm(const void *actionlist, size_t globCount /* = 0 */)
+		: m_globCount(globCount)
+{
 	dasm_init(this, 1);
+	m_glob = 0;
+	if (globCount) {
+		dasm_setupglobal(this, &m_glob, globCount); 
+	}
 	dasm_setup(this, actionlist);
 	growPc(1);
+}
+
+DynAsm::~DynAsm() {
 }
 
 void *DynAsm::build() {
@@ -29,7 +38,6 @@ void *DynAsm::build() {
 	void *ret = (char*)mem + sizeof(size_t);
 
 	dasm_encode(this, ret);
-	dasm_free(this);
 
 	DWORD oldProt=0;
 	BOOL st = VirtualProtect(mem, size, PAGE_EXECUTE_READ, &oldProt);
@@ -44,7 +52,9 @@ void *DynAsm::build() {
 
 bool DynAsm::destroy(void *code) {
 	void *mem = (char*)code - sizeof(size_t);
-	return (0 != VirtualFree(mem, 0, MEM_RELEASE));
+	VirtualFree(mem, 0, MEM_RELEASE);
+	dasm_free(this);
+	return true;
 }
 
 int DynAsm::getPc(size_t index) {
