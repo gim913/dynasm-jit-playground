@@ -6,7 +6,6 @@
 |
 |.define INBUF, rcx 
 |.define INSIZE, rdx
-|.define INTBL, r8
 |
 |.define PTR, rsi
 |.define CNT, rcx // clobber
@@ -25,7 +24,7 @@
 |  pop rsi; pop rdi; pop rbx;
 |.endmacro
 
-#include <iostream>
+#include <stdint.h>
 
 extern unsigned int crcTab[4*256];
 
@@ -38,7 +37,7 @@ void dynasmGenerator(Dst_DECL)
 | mov CNT, INSIZE
 | xor CRC, CRC
 | shr CNT, 2
-| mov TBL, INTBL
+| mov64 TBL, (uint64_t)crcTab
 | not CRC
 |
 |1:

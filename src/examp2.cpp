@@ -68,22 +68,14 @@ int main(int argc, char *argv[]) {
 
 		dynasmGenerator(&da);
   
-#ifdef _WIN64
-		uint32_t (__fastcall * fptr)(void*,size_t,void*) = reinterpret_cast<uint32_t(__fastcall *)(void*, size_t,void*)>( da.build() );
-#elif _WIN32
 		uint32_t (__fastcall * fptr)(void*,size_t) = reinterpret_cast<uint32_t(__fastcall *)(void*, size_t)>( da.build() );
-#endif
 
 		Timer::init();
 
 		auto t1 = Timer::tick();
 		uint32_t real = crcSlicing4(dataBlock, dataSize);
 		auto t2 = Timer::tick();
-#ifdef _WIN64
-		uint32_t ret = fptr(dataBlock, dataSize, crcTab);
-#elif _WIN32
 		uint32_t ret = fptr(dataBlock, dataSize);
-#endif
 		auto t3 = Timer::tick();
 	
 		t3 -= t2;
