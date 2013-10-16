@@ -6,6 +6,7 @@ pushd src
 
 %LUA% %DYNASMDIR%/dynasm.lua %DASMFLAGS% examp1_%PLAT%.dasc |sed "s/^# /#line /" > examp1_%PLAT%.h
 %LUA% %DYNASMDIR%/dynasm.lua %DASMFLAGS% examp2_%PLAT%.dasc |sed "s/^# /#line /" > examp2_%PLAT%.h
+%LUA% %DYNASMDIR%/dynasm.lua %DASMFLAGS% gram_%PLAT%.dasc |sed "s/^# /#line /" > gram_%PLAT%.h
 
 %CC% %CFLAGS% %CPPFLAGS% dynasm-helper.cpp /Fo%OBJDIR% 
 %CC% %CFLAGS% %CPPFLAGS% examp1.cpp /Fo%OBJDIR% 

@@ -1,0 +1,21 @@
+|.arch x64
+|.section code
+|.globals GLOB_
+|.actionlist actions
+|
+|.macro saveregs
+|.endmacro 
+|.macro restoreregs
+|.endmacro
+
+#include <stdint.h>
+
+
+void dynasmGenerator(Dst_DECL)
+{
+// dasm understandable code is here
+| saveregs
+|
+| restoreregs
+| ret
+}
