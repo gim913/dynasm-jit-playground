@@ -203,8 +203,10 @@ int verbose = 0;
 
 #define MAXRUN (1000*1000*10)
 
-void executeInstructions(uint32_t * instructions, size_t n, uint64_t* machineMem, size_t maxMemAccess) {
-	unsigned long gpc=0; // program counter
+void executeInstructions(uint32_t* instructions, size_t n, uint64_t* machineMem, size_t maxMemAccess) {
+	DynAsm da(actions, GLOB__MAX);
+
+	size_t gpc=0; // program counter
 	unsigned long lc=0;
 	while (1)
 	{
@@ -276,28 +278,16 @@ int main(int argc, char *argv[])
 	maxMemAccess += 1;
 	machineMem = new uint64_t[maxMemAccess]();
 
-	machineMem[1] = 10;
-
-	executeInstructions(instructions, n, machineMem, maxMemAccess);
-	dumpInstructions();
+	machineMem[1] = 3;
 
 	try {
-		DynAsm da(actions, GLOB__MAX);
-
-		dynasmGenerator(&da);
-  
-		uint32_t (__fastcall * fptr)(void*,size_t) = reinterpret_cast<uint32_t(__fastcall *)(void*, size_t)>( da.build() );
-
-		Timer::init();
-
-		uint32_t ret = fptr(0, 0);
-		
-		da.destroy(fptr);
+		executeInstructions(instructions, n, machineMem, maxMemAccess);
 
 	} catch(std::exception& e) {
-		std::cout << "exception occured" << std::endl;
+		std::cout << "exception occurred" << std::endl;
 		std::cout << e.what() << std::endl;
 	}
+	dumpInstructions();
 
 	return 0;
 }
