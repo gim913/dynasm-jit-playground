@@ -216,21 +216,21 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 		case Op_Zero:
 			printq("EIP("<< gpc <<") Z("<< GETOP(1, gpc) <<")\n");
 			machineMem[GETOP(1, gpc)] = 0;
-			GETOP(4, gpc)++;
+			INCSTATS(gpc);
 			gpc++; break;
 		case Op_Increment:
 			machineMem[GETOP(1, gpc)]++;
 			printq("EIP("<< gpc <<") S("<< GETOP(1, gpc) <<") = " << machineMem[GETOP(1, gpc)]<<"\n");
-			GETOP(4, gpc)++;
+			INCSTATS(gpc);
 			gpc++; break;
 		case Op_Transfer:
 			machineMem[GETOP(2, gpc)]=machineMem[GETOP(1, gpc)];
 			printq("EIP("<< gpc <<") T("<< GETOP(1, gpc) <<") -> (" << GETOP(2, gpc) << ") = " << machineMem[GETOP(2, gpc)]<<"\n");
-			GETOP(4, gpc)++;
+			INCSTATS(gpc);
 			gpc++; break;
 		case Op_Jump:
 			printq("EIP("<< gpc <<") goto ("<<GETOP(3, gpc)<<"\n");
-			GETOP(4, gpc)++;
+			INCSTATS(gpc);
 			gpc = GETOP(1, gpc);
 			break;
 		case Op_Conditional_Jump:
@@ -238,7 +238,7 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 			printq(GETOP(1, gpc) <<")"<<machineMem[GETOP(1, gpc)]<<" == (");
 			printq(GETOP(2, gpc) <<")"<<machineMem[GETOP(2, gpc)]<<" then goto ");
 			printq(GETOP(3, gpc)<<"\n");
-			GETOP(4, gpc)++;
+			INCSTATS(gpc);
 			if (machineMem[GETOP(2, gpc)] == machineMem[GETOP(1, gpc)]) {
 				size_t jmpEip = gpc;
 				gpc = GETOP(3, gpc);
