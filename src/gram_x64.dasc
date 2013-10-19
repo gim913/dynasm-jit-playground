@@ -21,12 +21,15 @@ struct Instr {
 
 #define GETCD(programCounter) (instructions[programCounter].opcode)
 #define GETOP(idx,programCounter) (instructions[programCounter].op[idx-1])
-#define STATSINC(programCounter) (instructions[programCounter].statsCounter++)
-#define STATSCNT(programCounter,cnt) (instructions[programCounter].statsIdx = (uint16_t)cnt)
+#define STATSCNT(programCounter) (instructions[programCounter].statsCounter)
+#define STATSIDX(programCounter,cnt) (instructions[programCounter].statsIdx = (uint16_t)cnt)
+
+void dumpInstructions(Instr* instructions, int start = 0, int end = 0);
 
 void dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, uint64_t* machineMem, size_t maxMemAccess)
 {
-// dasm understandable code is here
+	dumpInstructions(instructions, start, end);
+
 | saveregs
 |
 | restoreregs

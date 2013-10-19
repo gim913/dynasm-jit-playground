@@ -177,11 +177,11 @@ void parseInput(char * fileName) {
 	// here 'n' has REAL instruction count
 }
 
-void dumpInstructions(Instr* instructions) {
+void dumpInstructions(Instr* instructions, int start /* = 0 */, int end /* = 0*/) {
 
 #define mnem(x) ("ZSTJg"[x])
 
-	for (size_t i = 0; i < n; ++i) {
+	for (size_t i = start; i < (end?end:n); ++i) {
 		std::cerr << std::setw(3) << i << ": ";
 		std::cerr << std::setw(3) << mnem(instructions[i].opcode) << " ";
 		std::cerr << std::setw(5) << instructions[i].op[0] << " ";
@@ -216,43 +216,47 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 		case Op_Zero:
 			printq("EIP("<< gpc <<") Z("<< GETOP(1, gpc) <<")\n");
 			machineMem[GETOP(1, gpc)] = 0;
-			STATSINC(gpc);
-			STATSCNT(gpc, lc);
+			STATSCNT(gpc)++;
+			STATSIDX(gpc, lc);
 			gpc++; break;
 		case Op_Increment:
 			machineMem[GETOP(1, gpc)]++;
 			printq("EIP("<< gpc <<") S("<< GETOP(1, gpc) <<") = " << machineMem[GETOP(1, gpc)]<<"\n");
-			STATSINC(gpc);
-			STATSCNT(gpc, lc);
+			STATSCNT(gpc)++;
+			STATSIDX(gpc, lc);
 			gpc++; break;
 		case Op_Transfer:
 			machineMem[GETOP(2, gpc)]=machineMem[GETOP(1, gpc)];
 			printq("EIP("<< gpc <<") T("<< GETOP(1, gpc) <<") -> (" << GETOP(2, gpc) << ") = " << machineMem[GETOP(2, gpc)]<<"\n");
-			STATSINC(gpc);
-			STATSCNT(gpc, lc);
+			STATSCNT(gpc)++;
+			STATSIDX(gpc, lc);
 			gpc++; break;
 		case Op_Jump:
-			printq("EIP("<< gpc <<") goto ("<<GETOP(3, gpc)<<"\n");
-			STATSINC(gpc);
-			STATSCNT(gpc, lc);
-			gpc = GETOP(1, gpc);
-			break;
 		case Op_Conditional_Jump:
-			printq("EIP("<< gpc <<") (");
-			printq(GETOP(1, gpc) <<")"<<machineMem[GETOP(1, gpc)]<<" == (");
-			printq(GETOP(2, gpc) <<")"<<machineMem[GETOP(2, gpc)]<<" then goto ");
-			printq(GETOP(3, gpc)<<"\n");
-			STATSINC(gpc);
-			STATSCNT(gpc, lc);
-			if (machineMem[GETOP(2, gpc)] == machineMem[GETOP(1, gpc)]) {
+			if (GETCD(gpc) == Op_Jump) {
+				printq("EIP("<< gpc <<") goto ("<<GETOP(3, gpc)<<"\n");
+			} else {
+				printq("EIP("<< gpc <<") (");
+				printq(GETOP(1, gpc) <<")"<<machineMem[GETOP(1, gpc)]<<" == (");
+				printq(GETOP(2, gpc) <<")"<<machineMem[GETOP(2, gpc)]<<" then goto ");
+				printq(GETOP(3, gpc)<<"\n");
+			}
+			STATSCNT(gpc)++;
+			STATSIDX(gpc, lc);
+			if (GETCD(gpc) == Op_Jump || machineMem[GETOP(2, gpc)] == machineMem[GETOP(1, gpc)]) {
 				size_t jmpEip = gpc;
-				gpc = GETOP(3, gpc);
+				if (GETCD(gpc) == Op_Jump) {
+					gpc = GETOP(1, gpc);
+				} else {
+					gpc = GETOP(3, gpc);
+				}
+				
 				// it's sooooo hot here...
-				if (GETOP(4, gpc) == 4) {
+				if (STATSCNT(gpc) == 4) {
 					// if we were at 'jump destination' more times than at jump itself
 					// (so hopefully there's a path in code from GPC -> JMPEIP)
-					if (GETOP(4, jmpEip) <= GETOP(4, gpc)) {
-						printq("let's generate hoties!" << gpc << "c("<<GETOP(4, gpc)<< ") to " << jmpEip << " c("<<GETOP(4, jmpEip)<<")\n");
+					if (STATSCNT(jmpEip) <= STATSCNT(gpc)) {
+						printq("let's generate hoties! " << gpc << " c("<<STATSCNT(gpc)<< ") to " << jmpEip << " c("<<STATSCNT(jmpEip)<<")\n");
 						dynasmGenerator(&da, instructions, gpc, jmpEip, machineMem, maxMemAccess);
 
 
