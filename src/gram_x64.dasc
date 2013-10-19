@@ -4,12 +4,16 @@
 |.actionlist actions
 |
 |.macro saveregs
+|    push rdi; push rsi
 |.endmacro 
 |.macro restoreregs
+|    pop rsi; pop rdi;
 |.endmacro
 
+#include "dynasm-helper.h"
 #include "gram_bc.h"
 #include <stdint.h>
+#include <map>
 #include <iostream>
 
 #pragma pack(push, 1)
@@ -25,16 +29,25 @@ struct Instr {
 #define STATSCNT(programCounter) (instructions[programCounter].statsCounter)
 #define STATSIDX(programCounter,cnt) (instructions[programCounter].statsIdx = (uint16_t)cnt)
 
+
+#define printgen(xxx) do { std::cerr << xxx; } while(0)
+
 void dumpInstructions(Instr* instructions, int start = 0, int end = 0);
+int labelsCount = 1;
 
 bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, uint64_t* machineMem, size_t maxMemAccess)
 {
-	dumpInstructions(instructions, start, end);
+	dumpInstructions(instructions, start, end+1);
 
 	// we WON'T try to be smart, in first pass we
 	// check if all the jumps fall into start/end range
 	// (it's also allowed to do jump to 'end+1')
 	// if any jump is outside we won't to try to JIT that piece
+	//
+	// there will also be special case if jump dest > instructionsCount (end of program)
+
+	// we'll collect all the jump destinations in following map, we're gonna need that later
+	std::map<size_t, int> labels;
 
 	// pass 1
 	size_t locGpc = start;
@@ -54,6 +67,7 @@ bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, ui
 				if (dest < start || dest > end+1) {
 					return false;
 				}
+				labels[dest] = 0;
 				locGpc++;
 				break;
 		}
@@ -62,8 +76,90 @@ bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, ui
 		}
 	}
 
-| saveregs
-|
+	std::map<size_t, int>::iterator it = labels.begin();
+	std::map<size_t, int>::iterator _it = labels.end();
+
+	for (; it != _it; ++it) {
+		(*it).second = labelsCount++;
+	}
+
+	Dst->growPc(labelsCount);
+
+	uint64_t natInstructions = (uint64_t)instructions;
+	uint64_t natMachineMem = (uint64_t)machineMem;
+
+	| saveregs
+	|
+	| mov64 rdi, natMachineMem
+	| mov64 rsi, natInstructions
+	| xor rax, rax
+	|
+	|1:
+
+	locGpc = start;
+	while (1)
+	{
+		it = labels.find(locGpc);
+		if (it != labels.end()) {
+			|=>((*it).second):
+		}
+		switch (GETCD(locGpc))
+		{
+		case Op_Zero:
+			| mov eax, dword [rsi + locGpc*5 + 1]
+			| mov aword [rdi + rax], 0
+
+			printgen("..EIP("<< locGpc <<") Z("<< GETOP(1, locGpc) <<")\n");
+			// machineMem[GETOP(1, locGpc)] = 0;
+			locGpc++; break;
+		case Op_Increment:
+			| mov eax, dword [rsi + locGpc*5 + 1]
+			| inc aword [rdi + rax]
+
+			printgen("..EIP("<< locGpc <<") S("<< GETOP(1, locGpc) <<")\n");
+			// machineMem[GETOP(1, locGpc)]++;
+			locGpc++; break;
+		case Op_Transfer:
+			| mov eax, dword [rsi + locGpc*5 + 1]
+			| mov dword [rsi + locGpc*5 + 2], eax
+
+			printgen("..EIP("<< locGpc <<") T("<< GETOP(1, locGpc) <<") -> ("<< GETOP(2, locGpc) <<")\n");
+			// machineMem[GETOP(2, locGpc)]=machineMem[GETOP(1, locGpc)];
+			locGpc++; break;
+		case Op_Jump:
+			dest = GETOP(3, locGpc);
+			printgen("..EIP("<< locGpc <<") goto "<<dest<<":"<< labels[dest] <<"\n");
+			if (dest == end+1) {
+				| ret
+
+			} else {
+				| jmp => labels[dest]
+			}
+			locGpc++; break;
+			break;
+
+		case Op_Conditional_Jump:
+			dest = GETOP(3, locGpc);
+			printgen("..EIP("<< locGpc <<") ("<< GETOP(1, locGpc) <<") == ("<< GETOP(2, locGpc) <<") goto "<<dest<<":"<< labels[dest] <<"\n");
+			| mov eax, dword [rsi + locGpc*5 + 1]
+			| cmp eax, dword [rsi + locGpc*5 + 2]
+			| jne >2
+			if (dest == end+1) {
+				| ret
+
+			} else {
+				| je => labels[dest]
+			}
+			|2:
+
+			locGpc++; break;
+			break;
+		}
+
+		if (locGpc > end) {
+			break;
+		}
+	}
 | restoreregs
 | ret
 
