@@ -7,5 +7,6 @@ enum {
 	, Op_Increment
 	, Op_Transfer
 	, Op_Conditional_Jump
+	, Op_Jump
 };
 

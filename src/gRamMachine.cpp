@@ -45,6 +45,9 @@ int gatoi(char **buf, unsigned long *a) {
 //space for bytecode
 uint32_t *instructions;
 
+#define GETCD(programCounter) (instructions[WCNT * programCounter])
+#define GETOP(idx,programCounter) (instructions[WCNT * programCounter + idx])
+
 int parseInstruction(char *s) {
 	char *k;
 	char comm[10] = "zZsStTjJ";
@@ -131,6 +134,18 @@ int parseInstruction(char *s) {
 	if (*k != ')') {
 		fatal("')' expected  " << lineNo << ":" << (k-s) << "but '" << (*k) << "' found");
 	}
+
+	// fix unconditional jump:
+	// CJ x x y  ->  J y
+	if (curInstr == Op_Conditional_Jump && GETOP(1,n) == GETOP(2, n))
+	{
+		std::cout << "patching jump" << std::endl;
+		set_instruction(Op_Jump);
+		set_operand(1, GETOP(3, n));
+		set_operand(2, 0);
+		set_operand(3, 0);
+	}
+
 	k++;
 	std::cerr << ".."; 
 	push_instruction();
@@ -169,7 +184,7 @@ void parseInput(char * fileName) {
 
 void dumpInstructions() {
 
-#define mnem(x) ("ZSTJ"[x])
+#define mnem(x) ("ZSTJg"[x])
 
 	for (size_t i = 0; i < n; ++i) {
 		std::cerr << std::setw(3) << i << ": ";
@@ -185,9 +200,6 @@ void dumpInstructions() {
 int verbose = 0;
 
 #define printq(xxx) do { if(verbose) std::cerr << xxx; } while(0)
-
-#define GETCD(programCounter) (instructions[WCNT * programCounter])
-#define GETOP(idx,programCounter) (instructions[WCNT * programCounter + idx])
 
 #define MAXRUN (1000*1000*10)
 
