@@ -10,6 +10,7 @@
 
 #include "gram_bc.h"
 #include <stdint.h>
+#include <iostream>
 
 #pragma pack(push, 1)
 struct Instr {
@@ -26,12 +27,45 @@ struct Instr {
 
 void dumpInstructions(Instr* instructions, int start = 0, int end = 0);
 
-void dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, uint64_t* machineMem, size_t maxMemAccess)
+bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, uint64_t* machineMem, size_t maxMemAccess)
 {
 	dumpInstructions(instructions, start, end);
+
+	// we WON'T try to be smart, in first pass we
+	// check if all the jumps fall into start/end range
+	// (it's also allowed to do jump to 'end+1')
+	// if any jump is outside we won't to try to JIT that piece
+
+	// pass 1
+	size_t locGpc = start;
+	size_t dest;
+	while (1)
+	{
+		switch (GETCD(locGpc))
+		{
+			case Op_Zero:
+			case Op_Increment:
+			case Op_Transfer:
+				locGpc++;
+				break;
+			case Op_Jump:
+			case Op_Conditional_Jump:
+				dest = GETOP(3, locGpc);
+				if (dest < start || dest > end+1) {
+					return false;
+				}
+				locGpc++;
+				break;
+		}
+		if (locGpc > end) {
+			break;
+		}
+	}
 
 | saveregs
 |
 | restoreregs
 | ret
+
+	return true;
 }

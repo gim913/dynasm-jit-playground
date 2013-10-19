@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
 	maxMemAccess += 1;
 	machineMem = new uint64_t[maxMemAccess]();
 
-	machineMem[1] = 3;
+	machineMem[1] = 5;
 
 	try {
 		executeInstructions(ginstructions, n, machineMem, maxMemAccess);
