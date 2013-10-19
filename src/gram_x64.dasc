@@ -21,7 +21,8 @@ struct Instr {
 
 #define GETCD(programCounter) (instructions[programCounter].opcode)
 #define GETOP(idx,programCounter) (instructions[programCounter].op[idx-1])
-#define INCSTATS(programCounter) (instructions[programCounter].statsCounter++)
+#define STATSINC(programCounter) (instructions[programCounter].statsCounter++)
+#define STATSCNT(programCounter,cnt) (instructions[programCounter].statsIdx = (uint16_t)cnt)
 
 void dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, uint64_t* machineMem, size_t maxMemAccess)
 {
