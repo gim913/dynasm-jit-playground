@@ -11,12 +11,19 @@
 #include "gram_bc.h"
 #include <stdint.h>
 
-#define WCNT 5
-#define GETCD(programCounter) (instructions[WCNT * programCounter])
-#define GETOP(idx,programCounter) (instructions[WCNT * programCounter + idx])
+#pragma pack(push, 1)
+struct Instr {
+	uint32_t opcode;
+	uint32_t op[3]; // operands
+	uint16_t statsCounter, statsIdx;
+};
+#pragma pack(pop)
+
+#define GETCD(programCounter) (instructions[programCounter].opcode)
+#define GETOP(idx,programCounter) (instructions[programCounter].op[idx-1])
 
 
-void dynasmGenerator(Dst_DECL, uint32_t* instructions, size_t start, size_t end, uint64_t* machineMem, size_t maxMemAccess)
+void dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, uint64_t* machineMem, size_t maxMemAccess)
 {
 // dasm understandable code is here
 | saveregs

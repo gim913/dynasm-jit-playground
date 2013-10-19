@@ -41,9 +41,9 @@ int gatoi(char **buf, unsigned long *a) {
 
 // instruction type, op1, op2, op3, stats
 //space for bytecode
-uint32_t *instructions;
+Instr *ginstructions;
 
-int parseInstruction(char *s) {
+int parseInstruction(Instr* instructions, char *s) {
 	char *k;
 	char comm[10] = "zZsStTjJ";
 	int pars[4] = { 1, 1, 2, 3 }, i;
@@ -61,12 +61,12 @@ int parseInstruction(char *s) {
 
 
 #define set_instruction(instType) do {\
-	instructions[WCNT * n] = instType; \
+	instructions[n].opcode = instType; \
 	} while (0)
 
 
 #define set_operand(idx,operand) do {\
-	instructions[WCNT * n + idx] = operand; \
+	instructions[n].op[idx-1] = operand; \
 	} while (0)
 
 #define push_instruction() n++
@@ -161,14 +161,14 @@ void parseInput(char * fileName) {
 
 	fseek(fp, 0L, SEEK_SET);
 
-	instructions = new uint32_t[n * WCNT*sizeof(uint32_t)]();
+	ginstructions = new Instr[n * sizeof(Instr)]();
 
 	std::cerr << "parsing input...";
 	n=0;
 	while (fgets(buf, sizeof(buf), fp) != NULL)
 	{
 		DELN(buf);
-		parseInstruction(buf);
+		parseInstruction(ginstructions, buf);
 	}
 	std::cerr << "  DONE\n\n";
 
@@ -177,17 +177,17 @@ void parseInput(char * fileName) {
 	// here 'n' has REAL instruction count
 }
 
-void dumpInstructions() {
+void dumpInstructions(Instr* instructions) {
 
 #define mnem(x) ("ZSTJg"[x])
 
 	for (size_t i = 0; i < n; ++i) {
 		std::cerr << std::setw(3) << i << ": ";
-		std::cerr << std::setw(3) << mnem(instructions[WCNT * i    ]) << " ";
-		std::cerr << std::setw(5) << instructions[WCNT * i + 1] << " ";
-		std::cerr << std::setw(5) << instructions[WCNT * i + 2] << " ";
-		std::cerr << std::setw(5) << instructions[WCNT * i + 3] << "  | ";
-		std::cerr << std::setw(5) << instructions[WCNT * i + 4] << " ";
+		std::cerr << std::setw(3) << mnem(instructions[i].opcode) << " ";
+		std::cerr << std::setw(5) << instructions[i].op[0] << " ";
+		std::cerr << std::setw(5) << instructions[i].op[1] << " ";
+		std::cerr << std::setw(5) << instructions[i].op[2] << "  | ";
+		std::cerr << std::setw(5) << instructions[i].statsCounter << " " << instructions[i].statsIdx;
 		std::cerr << std::endl;
 	}
 }
@@ -198,7 +198,7 @@ int verbose = 0;
 
 #define MAXRUN (1000*1000*10)
 
-void executeInstructions(uint32_t* instructions, size_t n, uint64_t* machineMem, size_t maxMemAccess) {
+void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, size_t maxMemAccess) {
 	DynAsm da(actions, GLOB__MAX);
 
 	size_t gpc=0; // program counter
@@ -289,7 +289,7 @@ int main(int argc, char *argv[])
 	}
 
 	parseInput(argv[1]);
-	dumpInstructions();
+	dumpInstructions(ginstructions);
 
 	maxMemAccess += 1;
 	machineMem = new uint64_t[maxMemAccess]();
@@ -297,13 +297,13 @@ int main(int argc, char *argv[])
 	machineMem[1] = 3;
 
 	try {
-		executeInstructions(instructions, n, machineMem, maxMemAccess);
+		executeInstructions(ginstructions, n, machineMem, maxMemAccess);
 
 	} catch(std::exception& e) {
 		std::cout << "exception occurred" << std::endl;
 		std::cout << e.what() << std::endl;
 	}
-	dumpInstructions();
+	dumpInstructions(ginstructions);
 
 	return 0;
 }
