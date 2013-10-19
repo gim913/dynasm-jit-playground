@@ -39,14 +39,9 @@ int gatoi(char **buf, unsigned long *a) {
 	return (0);
 }
 
-
 // instruction type, op1, op2, op3, stats
-#define WCNT 5
 //space for bytecode
 uint32_t *instructions;
-
-#define GETCD(programCounter) (instructions[WCNT * programCounter])
-#define GETOP(idx,programCounter) (instructions[WCNT * programCounter + idx])
 
 int parseInstruction(char *s) {
 	char *k;
@@ -244,10 +239,26 @@ void executeInstructions(uint32_t* instructions, size_t n, uint64_t* machineMem,
 			printq(GETOP(2, gpc) <<")"<<machineMem[GETOP(2, gpc)]<<" then goto ");
 			printq(GETOP(3, gpc)<<"\n");
 			GETOP(4, gpc)++;
-			if (machineMem[GETOP(2, gpc)] == machineMem[GETOP(1, gpc)])
+			if (machineMem[GETOP(2, gpc)] == machineMem[GETOP(1, gpc)]) {
+				size_t jmpEip = gpc;
 				gpc = GETOP(3, gpc);
-			else
+				// it's sooooo hot here...
+				if (GETOP(4, gpc) == 4) {
+					// if we were at 'jump destination' more times than at jump itself
+					// (so hopefully there's a path in code from GPC -> JMPEIP)
+					if (GETOP(4, jmpEip) <= GETOP(4, gpc)) {
+						printq("let's generate hoties!" << gpc << "c("<<GETOP(4, gpc)<< ") to " << jmpEip << " c("<<GETOP(4, jmpEip)<<")\n");
+						dynasmGenerator(&da, instructions, gpc, jmpEip, machineMem, maxMemAccess);
+
+
+						
+					} else {
+						// ignore for now?
+					}
+				}
+			} else {
 				gpc++;
+			}
 			break;
 		}
 		if (gpc>=n)

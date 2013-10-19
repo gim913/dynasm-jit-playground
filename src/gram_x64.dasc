@@ -8,10 +8,15 @@
 |.macro restoreregs
 |.endmacro
 
+#include "gram_bc.h"
 #include <stdint.h>
 
+#define WCNT 5
+#define GETCD(programCounter) (instructions[WCNT * programCounter])
+#define GETOP(idx,programCounter) (instructions[WCNT * programCounter + idx])
 
-void dynasmGenerator(Dst_DECL)
+
+void dynasmGenerator(Dst_DECL, uint32_t* instructions, size_t start, size_t end, uint64_t* machineMem, size_t maxMemAccess)
 {
 // dasm understandable code is here
 | saveregs
