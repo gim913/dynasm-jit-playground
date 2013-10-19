@@ -179,10 +179,11 @@ void parseInput(char * fileName) {
 }
 
 void dumpInstructions(Instr* instructions, int start /* = 0 */, int end /* = 0*/) {
+	// zero, successor(inc), transfer(move), conditional jump, unconditional jump, native
+#define mnem(x) ("ZSTJgn"[x])
 
-#define mnem(x) ("ZSTJg"[x])
-
-	for (size_t i = start; i < (end?end:instructionsCount); ++i) {
+	size_t i = start;
+	while (i < (end?end:instructionsCount)) {
 		std::cerr << std::setw(3) << i << ": ";
 		std::cerr << std::setw(3) << mnem(instructions[i].opcode) << " ";
 		std::cerr << std::setw(5) << instructions[i].op[0] << " ";
@@ -190,6 +191,12 @@ void dumpInstructions(Instr* instructions, int start /* = 0 */, int end /* = 0*/
 		std::cerr << std::setw(5) << instructions[i].op[2] << "  | ";
 		std::cerr << std::setw(5) << instructions[i].statsCounter << " " << instructions[i].statsIdx;
 		std::cerr << std::endl;
+
+		if (instructions[i].opcode == Op_Generated) {
+			i = instructions[i].op[2];
+		} else {
+			i++;
+		}
 	}
 }
 
@@ -259,6 +266,12 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 						if ( dynasmGenerator(&da, instructions, gpc, jmpEip, machineMem, maxMemAccess) ) {
 							int (*fptr)() = reinterpret_cast<int(*)()>( da.build() );
 
+							GETCD(gpc) = Op_Generated;
+							// now this one is ugly and note to good girls: you shouldn't do it,
+							// but I'm too lazy, to make union :p
+							*((size_t*)&instructions[gpc].statsCounter) = (size_t)fptr;
+
+							GETOP(3, gpc) = jmpEip+1;
 						}
 
 						
@@ -269,6 +282,18 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 			} else {
 				gpc++;
 			}
+			break;
+		case Op_Generated:
+			int (*fptr)() = *((int (**)())&instructions[gpc].statsCounter);
+
+			printq("EIP("<< gpc <<") (");
+			printq(std::hex << fptr<<") then goto ");
+			printq(std::dec << GETOP(3, gpc)<<"\n");
+
+			fptr();
+
+			gpc = GETOP(3, gpc);
+
 			break;
 		}
 		if (gpc>=n)
@@ -304,7 +329,7 @@ int main(int argc, char *argv[])
 	maxMemAccess += 1;
 	machineMem = new uint64_t[maxMemAccess]();
 
-	machineMem[1] = 5;
+	machineMem[1] = 19;
 
 	try {
 		executeInstructions(ginstructions, instructionsCount, machineMem, maxMemAccess);

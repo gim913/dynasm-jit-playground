@@ -8,5 +8,6 @@ enum {
 	, Op_Transfer
 	, Op_Conditional_Jump
 	, Op_Jump
+	, Op_Generated
 };
 

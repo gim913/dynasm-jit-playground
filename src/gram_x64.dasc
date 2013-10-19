@@ -21,23 +21,25 @@ struct Instr {
 	uint32_t opcode;
 	uint32_t op[3]; // operands
 	uint16_t statsCounter, statsIdx;
+	uint32_t padding;
 };
 #pragma pack(pop)
+
+|.type INSTR, Instr
 
 #define GETCD(programCounter) (instructions[programCounter].opcode)
 #define GETOP(idx,programCounter) (instructions[programCounter].op[idx-1])
 #define STATSCNT(programCounter) (instructions[programCounter].statsCounter)
 #define STATSIDX(programCounter,cnt) (instructions[programCounter].statsIdx = (uint16_t)cnt)
 
-
-#define printgen(xxx) do { std::cerr << xxx; } while(0)
+#define printgen(xxx) do { if(0) std::cerr << xxx; } while(0)
 
 void dumpInstructions(Instr* instructions, int start = 0, int end = 0);
 int labelsCount = 1;
 
 bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, uint64_t* machineMem, size_t maxMemAccess)
 {
-	dumpInstructions(instructions, start, end+1);
+	// dumpInstructions(instructions, start, end+1);
 
 	// we WON'T try to be smart, in first pass we
 	// check if all the jumps fall into start/end range
@@ -65,10 +67,20 @@ bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, ui
 			case Op_Conditional_Jump:
 				dest = GETOP(3, locGpc);
 				if (dest < start || dest > end+1) {
+					printgen("fatal fail\n");
 					return false;
 				}
 				labels[dest] = 0;
 				locGpc++;
+				break;
+			case Op_Generated:
+				dest = GETOP(3, locGpc);
+				if (dest < start || dest > end+1) {
+					printgen("fatal fail\n");
+					return false;
+				}
+				labels[dest] = 0;
+				locGpc = dest;
 				break;
 		}
 		if (locGpc > end) {
@@ -106,22 +118,24 @@ bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, ui
 		switch (GETCD(locGpc))
 		{
 		case Op_Zero:
-			| mov eax, dword [rsi + locGpc*5 + 1]
-			| mov aword [rdi + rax], 0
+			| mov eax, INSTR:rsi[locGpc].op[0]
+			| mov aword [rdi + rax*8], 0
 
 			printgen("..EIP("<< locGpc <<") Z("<< GETOP(1, locGpc) <<")\n");
 			// machineMem[GETOP(1, locGpc)] = 0;
 			locGpc++; break;
 		case Op_Increment:
-			| mov eax, dword [rsi + locGpc*5 + 1]
-			| inc aword [rdi + rax]
+			| mov eax, INSTR:rsi[locGpc].op[0]
+			| inc aword [rdi + rax*8]
 
 			printgen("..EIP("<< locGpc <<") S("<< GETOP(1, locGpc) <<")\n");
 			// machineMem[GETOP(1, locGpc)]++;
 			locGpc++; break;
 		case Op_Transfer:
-			| mov eax, dword [rsi + locGpc*5 + 1]
-			| mov dword [rsi + locGpc*5 + 2], eax
+			| mov eax, INSTR:rsi[locGpc].op[0]
+			| mov rcx, aword [rdi + rax*8]
+			| mov eax, INSTR:rsi[locGpc].op[1]
+			| mov aword [rdi + rax*8], rcx
 
 			printgen("..EIP("<< locGpc <<") T("<< GETOP(1, locGpc) <<") -> ("<< GETOP(2, locGpc) <<")\n");
 			// machineMem[GETOP(2, locGpc)]=machineMem[GETOP(1, locGpc)];
@@ -130,7 +144,7 @@ bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, ui
 			dest = GETOP(3, locGpc);
 			printgen("..EIP("<< locGpc <<") goto "<<dest<<":"<< labels[dest] <<"\n");
 			if (dest == end+1) {
-				| ret
+				| jmp >3
 
 			} else {
 				| jmp => labels[dest]
@@ -141,11 +155,13 @@ bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, ui
 		case Op_Conditional_Jump:
 			dest = GETOP(3, locGpc);
 			printgen("..EIP("<< locGpc <<") ("<< GETOP(1, locGpc) <<") == ("<< GETOP(2, locGpc) <<") goto "<<dest<<":"<< labels[dest] <<"\n");
-			| mov eax, dword [rsi + locGpc*5 + 1]
-			| cmp eax, dword [rsi + locGpc*5 + 2]
+			| mov eax, INSTR:rsi[locGpc].op[0]
+			| mov rcx, aword [rdi + rax*8]
+			| mov eax, INSTR:rsi[locGpc].op[1]
+			| cmp aword [rdi + rax*8], rcx
 			| jne >2
 			if (dest == end+1) {
-				| ret
+				| jmp >3
 
 			} else {
 				| je => labels[dest]
@@ -154,12 +170,31 @@ bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, ui
 
 			locGpc++; break;
 			break;
+
+		case Op_Generated:
+			dest = GETOP(3, locGpc);
+			int (*fptr)() = *((int (**)())instructions[locGpc].op);
+
+			printgen("..EIP("<< locGpc <<") (");
+			printgen(std::hex << fptr << ") then goto ");
+			printgen(std::dec << GETOP(3, locGpc) << " vs " << labels[dest] << "\n");
+
+			| mov rax, aword [rsi + locGpc*sizeof(Instr) + 4 + 12]
+			| call rax
+			if (dest == end+1) {
+				| jmp >3
+
+			} else {
+				// ...
+			}
+			locGpc = dest;
 		}
 
 		if (locGpc > end) {
 			break;
 		}
 	}
+| 3:
 | restoreregs
 | ret
 
