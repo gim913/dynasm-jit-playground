@@ -136,9 +136,10 @@ int parseInstruction(Instr* instructions, char *s) {
 	{
 		std::cout << "patching jump" << std::endl;
 		set_instruction(Op_Jump);
-		set_operand(1, GETOP(3, n));
+		set_operand(1, 0);
 		set_operand(2, 0);
-		set_operand(3, 0);
+		// leave jump destination untouched
+		//set_operand(3, ); 
 	}
 
 	k++;
@@ -245,11 +246,7 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 			STATSIDX(gpc, lc);
 			if (GETCD(gpc) == Op_Jump || machineMem[GETOP(2, gpc)] == machineMem[GETOP(1, gpc)]) {
 				size_t jmpEip = gpc;
-				if (GETCD(gpc) == Op_Jump) {
-					gpc = GETOP(1, gpc);
-				} else {
-					gpc = GETOP(3, gpc);
-				}
+				gpc = GETOP(3, gpc);
 				
 				// it's sooooo hot here...
 				if (STATSCNT(gpc) == 4) {
