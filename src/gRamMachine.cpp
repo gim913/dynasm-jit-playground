@@ -23,7 +23,7 @@
 	exit (0); \
 } while(0)
 
-size_t n; // number of instructions
+size_t instructionsCount; // number of instructions
 size_t maxMemAccess;
 uint32_t lineNo;
 uint64_t* machineMem;
@@ -61,15 +61,15 @@ int parseInstruction(Instr* instructions, char *s) {
 
 
 #define set_instruction(instType) do {\
-	instructions[n].opcode = instType; \
+	instructions[instructionsCount].opcode = instType; \
 	} while (0)
 
 
 #define set_operand(idx,operand) do {\
-	instructions[n].op[idx-1] = operand; \
+	instructions[instructionsCount].op[idx-1] = operand; \
 	} while (0)
 
-#define push_instruction() n++
+#define push_instruction() instructionsCount++
 
 	lineNo++;
 
@@ -132,7 +132,7 @@ int parseInstruction(Instr* instructions, char *s) {
 
 	// fix unconditional jump:
 	// CJ x x y  ->  J y
-	if (curInstr == Op_Conditional_Jump && GETOP(1,n) == GETOP(2, n))
+	if (curInstr == Op_Conditional_Jump && GETOP(1,instructionsCount) == GETOP(2, instructionsCount))
 	{
 		std::cout << "patching jump" << std::endl;
 		set_instruction(Op_Jump);
@@ -157,15 +157,15 @@ void parseInput(char * fileName) {
 	}
 
 	while (fgets(buf, sizeof(buf), fp) != NULL) {
-		n++;
+		instructionsCount++;
 	}
 
 	fseek(fp, 0L, SEEK_SET);
 
-	ginstructions = new Instr[n * sizeof(Instr)]();
+	ginstructions = new Instr[instructionsCount * sizeof(Instr)]();
 
 	std::cerr << "parsing input...";
-	n=0;
+	instructionsCount=0;
 	while (fgets(buf, sizeof(buf), fp) != NULL)
 	{
 		DELN(buf);
@@ -182,7 +182,7 @@ void dumpInstructions(Instr* instructions, int start /* = 0 */, int end /* = 0*/
 
 #define mnem(x) ("ZSTJg"[x])
 
-	for (size_t i = start; i < (end?end:n); ++i) {
+	for (size_t i = start; i < (end?end:instructionsCount); ++i) {
 		std::cerr << std::setw(3) << i << ": ";
 		std::cerr << std::setw(3) << mnem(instructions[i].opcode) << " ";
 		std::cerr << std::setw(5) << instructions[i].op[0] << " ";
@@ -303,7 +303,7 @@ int main(int argc, char *argv[])
 	machineMem[1] = 5;
 
 	try {
-		executeInstructions(ginstructions, n, machineMem, maxMemAccess);
+		executeInstructions(ginstructions, instructionsCount, machineMem, maxMemAccess);
 
 	} catch(std::exception& e) {
 		std::cout << "exception occurred" << std::endl;
