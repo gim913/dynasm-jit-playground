@@ -152,7 +152,7 @@ void parseInput(char * fileName) {
 	char buf[0x400];
 
 	if ((fp = fopen(fileName, "r")) == NULL) {
-		fatal("Cannot open input file: %s\n", fileName);
+		fatal("Cannot open input file: " << fileName);
 	}
 
 	while (fgets(buf, sizeof(buf), fp) != NULL) {
