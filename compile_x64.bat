@@ -11,9 +11,11 @@ pushd src
 %CC% %CFLAGS% %CPPFLAGS% dynasm-helper.cpp /Fo%OBJDIR% 
 %CC% %CFLAGS% %CPPFLAGS% examp1.cpp /Fo%OBJDIR% 
 %CC% %CFLAGS% %CPPFLAGS% examp2.cpp /Fo%OBJDIR% 
+%CC% %CFLAGS% %CPPFLAGS% gRamMachine.cpp /Fo%OBJDIR% 
 
 %REALLINK% %LDFLAGS% /out:../bin/examp1_%PLAT%.exe %OBJDIR%dynasm-helper.obj %OBJDIR%examp1.obj
 %REALLINK% %LDFLAGS% /out:../bin/examp2_%PLAT%.exe %OBJDIR%dynasm-helper.obj %OBJDIR%examp2.obj
+%REALLINK% %LDFLAGS% /out:../bin/gramMachine_%PLAT%.exe %OBJDIR%dynasm-helper.obj %OBJDIR%gRamMachine.obj 
 
 popd src
 
