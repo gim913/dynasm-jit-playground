@@ -2,6 +2,8 @@
 
 #include "gram_x64.h"
 
+#include "gram_bc.h"
+
 #include <iostream>
 #include <iomanip>
 #include <list>
@@ -37,12 +39,6 @@ int gatoi(char **buf, unsigned long *a) {
 	return (0);
 }
 
-enum {
-	Op_Zero
-	, Op_Increment
-	, Op_Transfer
-	, Op_Conditional_Jump
-};
 
 // instruction type, op1, op2, op3, stats
 #define WCNT 5
@@ -96,7 +92,7 @@ int parseInstruction(char *s) {
 		fatal("while parsing line " << lineNo << (k-s) << " sign " << (*k));
 	}
 
-	int curInstr = (strchr(comm, *k)-comm)/2;
+	int curInstr = (int)((strchr(comm, *k)-comm)/2);
 	set_instruction(curInstr);
 	k++;
 	if (!*k) {
