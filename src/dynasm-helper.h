@@ -20,6 +20,8 @@ public:
 	// allocate executable memory, build code
 	void *build();
 
+	void prepare();
+
 	// destroy code
 	bool destroy(void *code);
 
@@ -29,6 +31,7 @@ public:
 	struct dasm_State *m_state;
 	size_t m_globCount;
 	void* m_glob;
+	const void * m_actionList;
 };
 
 #include "dasm_proto.h"

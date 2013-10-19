@@ -7,15 +7,22 @@
 
 DynAsm::DynAsm(const void *actionlist, size_t globCount /* = 0 */)
 		: m_globCount(globCount)
+		, m_actionList(actionlist)
 {
 	dasm_init(this, 1);
-	m_glob = 0;
-	dasm_setupglobal(this, &m_glob, globCount); 
-	dasm_setup(this, actionlist);
-	growPc(1);
+	
 }
 
 DynAsm::~DynAsm() {
+}
+
+
+void DynAsm::prepare()
+{
+	m_glob = 0;
+	dasm_setupglobal(this, &m_glob, m_globCount); 
+	dasm_setup(this, m_actionList);
+	growPc(1);
 }
 
 void *DynAsm::build() {
@@ -36,6 +43,7 @@ void *DynAsm::build() {
 	void *ret = (char*)mem + sizeof(size_t);
 
 	dasm_encode(this, ret);
+
 
 	DWORD oldProt=0;
 	BOOL st = VirtualProtect(mem, size, PAGE_EXECUTE_READ, &oldProt);

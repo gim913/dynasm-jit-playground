@@ -254,6 +254,8 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 					// (so hopefully there's a path in code from GPC -> JMPEIP)
 					if (STATSCNT(jmpEip) <= STATSCNT(gpc)) {
 						printq("let's generate hoties! " << gpc << " c("<<STATSCNT(gpc)<< ") to " << jmpEip << " c("<<STATSCNT(jmpEip)<<")\n");
+						da.prepare();
+
 						if ( dynasmGenerator(&da, instructions, gpc, jmpEip, machineMem, maxMemAccess) ) {
 							int (*fptr)() = reinterpret_cast<int(*)()>( da.build() );
 
