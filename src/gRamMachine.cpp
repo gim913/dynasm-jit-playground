@@ -166,7 +166,7 @@ void parseInput(char * fileName) {
 
 	fseek(fp, 0L, SEEK_SET);
 
-	instructions = new uint32_t[n * WCNT*sizeof(uint32_t)];
+	instructions = new uint32_t[n * WCNT*sizeof(uint32_t)]();
 
 	std::cerr << "parsing input...";
 	n=0;
@@ -233,6 +233,11 @@ void executeInstructions(uint32_t* instructions, size_t n, uint64_t* machineMem,
 			printq("EIP("<< gpc <<") T("<< GETOP(1, gpc) <<") -> (" << GETOP(2, gpc) << ") = " << machineMem[GETOP(2, gpc)]<<"\n");
 			GETOP(4, gpc)++;
 			gpc++; break;
+		case Op_Jump:
+			printq("EIP("<< gpc <<") goto ("<<GETOP(3, gpc)<<"\n");
+			GETOP(4, gpc)++;
+			gpc = GETOP(1, gpc);
+			break;
 		case Op_Conditional_Jump:
 			printq("EIP("<< gpc <<") (");
 			printq(GETOP(1, gpc) <<")"<<machineMem[GETOP(1, gpc)]<<" == (");
