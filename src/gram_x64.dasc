@@ -21,7 +21,6 @@ struct Instr {
 	uint32_t opcode;
 	uint32_t op[3]; // operands
 	uint16_t statsCounter, statsIdx;
-	uint32_t padding;
 };
 #pragma pack(pop)
 
@@ -180,13 +179,16 @@ bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, ui
 
 		case Op_Generated:
 			dest = GETOP(3, locGpc);
-			int (*fptr)() = *((int (**)())instructions[locGpc].op);
+			size_t fptr = *((size_t*)instructions[locGpc].op);
 
 			printgen("..EIP("<< locGpc <<") (");
 			printgen(std::hex << fptr << ") then goto ");
 			printgen(std::dec << GETOP(3, locGpc) << " vs " << labels[dest] << "\n");
 
-			| mov rax, aword [rsi + locGpc*sizeof(Instr) + 4 + 12]
+			// we could drop whole rsi register, but it seems, I'm having better results using this
+			// than when using "mov64 rax, fptr"
+			//
+			| mov rax, aword [rsi + locGpc*sizeof(Instr) + 4]
 			| call rax
 			if (dest == end+1) {
 				| jmp >3

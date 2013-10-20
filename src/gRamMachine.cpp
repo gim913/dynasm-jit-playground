@@ -271,7 +271,7 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 							GETCD(gpc) = Op_Generated;
 							// now this one is ugly and note to good girls: you shouldn't do it,
 							// but I'm too lazy, to make union :p
-							*((size_t*)&instructions[gpc].statsCounter) = (size_t)fptr;
+							*((size_t*)instructions[gpc].op) = (size_t)fptr;
 
 							GETOP(3, gpc) = jmpEip+1;
 						}
@@ -286,7 +286,7 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 			}
 			break;
 		case Op_Generated:
-			int (*fptr)() = *((int (**)())&instructions[gpc].statsCounter);
+			int (*fptr)() = *((int (**)())instructions[gpc].op);
 
 			printq("EIP("<< gpc <<") (");
 			printq(std::hex << fptr<<") then goto ");
