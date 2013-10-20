@@ -131,10 +131,9 @@ int parseInstruction(Instr* instructions, char *s) {
 	}
 
 	// fix unconditional jump:
-	// CJ x x y  ->  J y
+	// CJ x x y  ->  J 0 0 y
 	if (curInstr == Op_Conditional_Jump && GETOP(1,instructionsCount) == GETOP(2, instructionsCount))
 	{
-		std::cout << "patching jump" << std::endl;
 		set_instruction(Op_Jump);
 		set_operand(1, 0);
 		set_operand(2, 0);
@@ -148,7 +147,7 @@ int parseInstruction(Instr* instructions, char *s) {
 	return 0;
 }
 
-void parseInput(char * fileName) {
+void parseInput(const char * fileName) {
 	FILE* fp;
 	char buf[0x400];
 
@@ -171,7 +170,7 @@ void parseInput(char * fileName) {
 		DELN(buf);
 		parseInstruction(ginstructions, buf);
 	}
-	std::cerr << "  DONE\n\n";
+	std::cerr << "  DONE\n";
 
 	fclose(fp);
 
@@ -323,7 +322,7 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 }
 
 template<bool Use_Jit>
-void performTest(char *inputFile)
+void performTest(const char* mesg, const char *inputFile)
 {
 	parseInput(inputFile);
 
@@ -341,7 +340,7 @@ void performTest(char *inputFile)
 		auto t1 = Timer::tick();
 		executeInstructions<Use_Jit>(ginstructions, instructionsCount, machineMem, maxMemAccess);
 		auto t2 = Timer::tick();
-		std::cout << " time: " << (t2-t1) << std::endl;
+		std::cout << mesg << " time: " << (t2-t1) << "\n\n";
 
 	} catch(std::exception& e) {
 		std::cout << "exception occurred" << std::endl;
@@ -362,6 +361,9 @@ int main(int argc, char *argv[])
 		fatal("syntax: gram <input file>");
 	}
 
-	performTest<true>(argv[1]);
+	performTest<false>(" * no-jit ", argv[1]);
+
+	performTest<true >(" *    jit ", argv[1]);
+
 	return 0;
 }
