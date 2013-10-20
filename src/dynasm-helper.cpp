@@ -14,6 +14,7 @@ DynAsm::DynAsm(const void *actionlist, size_t globCount /* = 0 */)
 }
 
 DynAsm::~DynAsm() {
+	dasm_free(this);
 }
 
 
@@ -44,6 +45,7 @@ void *DynAsm::build() {
 
 	dasm_encode(this, ret);
 
+	//FlushInstructionCache(GetCurrentProcess(), ret, size);
 
 	DWORD oldProt=0;
 	BOOL st = VirtualProtect(mem, size, PAGE_EXECUTE_READ, &oldProt);
@@ -59,7 +61,6 @@ void *DynAsm::build() {
 bool DynAsm::destroy(void *code) {
 	void *mem = (char*)code - sizeof(size_t);
 	VirtualFree(mem, 0, MEM_RELEASE);
-	dasm_free(this);
 	return true;
 }
 

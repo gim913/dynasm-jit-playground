@@ -204,10 +204,12 @@ int verbose = 0;
 
 #define printq(xxx) do { if(verbose) std::cerr << xxx; } while(0)
 
-#define MAXRUN (1000*1000*10)
+#define MAXRUN (1000*1000*1000)
 
+template<bool Use_Jit>
 void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, size_t maxMemAccess) {
 	DynAsm da(actions, GLOB__MAX);
+	std::list< void* > generatedFunctions;
 
 	size_t gpc=0; // program counter
 	unsigned long lc=0;
@@ -256,7 +258,7 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 				gpc = GETOP(3, gpc);
 				
 				// it's sooooo hot here...
-				if (STATSCNT(gpc) == 4) {
+				if (Use_Jit && STATSCNT(gpc) == 4) {
 					// if we were at 'jump destination' more times than at jump itself
 					// (so hopefully there's a path in code from GPC -> JMPEIP)
 					if (STATSCNT(jmpEip) <= STATSCNT(gpc)) {
@@ -264,7 +266,8 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 						da.prepare();
 
 						if ( dynasmGenerator(&da, instructions, gpc, jmpEip, machineMem, maxMemAccess) ) {
-							int (*fptr)() = reinterpret_cast<int(*)()>( da.build() );
+							void* fptr = da.build();
+							generatedFunctions.push_back( fptr );
 
 							GETCD(gpc) = Op_Generated;
 							// now this one is ugly and note to good girls: you shouldn't do it,
@@ -311,8 +314,44 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 		std::cerr << "value in cell number 0: " << machineMem[0] << "\n";
 		std::cerr << "program exited...\n";
 	}
+
+	auto it = generatedFunctions.begin();
+	auto _it = generatedFunctions.end();
+	for(; it != _it; ++it) {
+		da.destroy((*it));
+	}
 }
 
+template<bool Use_Jit>
+void performTest(char *inputFile)
+{
+	parseInput(inputFile);
+
+	//dumpInstructions(ginstructions);
+
+	maxMemAccess += 1;
+	machineMem = new uint64_t[maxMemAccess]();
+
+	machineMem[1] = 40;
+
+	try {
+
+		Timer::init();
+
+		auto t1 = Timer::tick();
+		executeInstructions<Use_Jit>(ginstructions, instructionsCount, machineMem, maxMemAccess);
+		auto t2 = Timer::tick();
+		std::cout << " time: " << (t2-t1) << std::endl;
+
+	} catch(std::exception& e) {
+		std::cout << "exception occurred" << std::endl;
+		std::cout << e.what() << std::endl;
+	}
+
+	delete[] machineMem;
+	//dumpInstructions(ginstructions);
+
+}
 
 int main(int argc, char *argv[])
 {
@@ -323,22 +362,6 @@ int main(int argc, char *argv[])
 		fatal("syntax: gram <input file>");
 	}
 
-	parseInput(argv[1]);
-	dumpInstructions(ginstructions);
-
-	maxMemAccess += 1;
-	machineMem = new uint64_t[maxMemAccess]();
-
-	machineMem[1] = 19;
-
-	try {
-		executeInstructions(ginstructions, instructionsCount, machineMem, maxMemAccess);
-
-	} catch(std::exception& e) {
-		std::cout << "exception occurred" << std::endl;
-		std::cout << e.what() << std::endl;
-	}
-	dumpInstructions(ginstructions);
-
+	performTest<true>(argv[1]);
 	return 0;
 }
