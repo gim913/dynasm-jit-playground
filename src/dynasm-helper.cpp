@@ -21,7 +21,8 @@ DynAsm::~DynAsm() {
 void DynAsm::prepare()
 {
 	m_glob = 0;
-	dasm_setupglobal(this, &m_glob, m_globCount); 
+	// cast is ok
+	dasm_setupglobal(this, &m_glob, (unsigned int)m_globCount); 
 	dasm_setup(this, m_actionList);
 	growPc(1);
 }

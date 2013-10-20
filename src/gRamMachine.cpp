@@ -273,7 +273,8 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 							// but I'm too lazy, to make union :p
 							*((size_t*)instructions[gpc].op) = (size_t)fptr;
 
-							GETOP(3, gpc) = jmpEip+1;
+							// my operands are 32b only, so let's cast this 
+							GETOP(3, gpc) = (uint32_t)(jmpEip+1);
 						}
 
 						
