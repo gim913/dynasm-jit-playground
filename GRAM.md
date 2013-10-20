@@ -14,6 +14,7 @@ Implementation has following features:
 	+ **S**ucc(n) - increment value in _n_-th cell
 	+ **T**ransfer(m,n) - copy value from _m_-th cell to _n_-th cell
 	+ **I**f(m,n, x) - if contents of _m_-th and _n_-th cells is equal *jump* to instruction number x
+ * jumping outside of available instructions, should stop the execution (not handled by JIT yet)
 
 As you can see **T** instruction isn't actually needed, and it could be implemented using *Z*, *S* and *I*.
 
@@ -208,7 +209,7 @@ be placed directly after *native* call instruction, e.g:
 000000656E1B0061 48 89 0C C7          mov         qword ptr [rdi+rax*8],rcx  
 ```
 
-### epiogue ###
+### epilogue ###
 
 If you'd like to see how interpreter and generator works, inside interpreter there is global
 `verbose` variable, and inside generator, you'd have to change, following define:
