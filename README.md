@@ -47,5 +47,15 @@ Example 3.
 ----------
 
 Is implementation of *counter machine* and is much more complicated.
-You can find detailed description in GRAM.md
+You can find detailed description in [GRAM.md](https://github.com/gim913/dynasm-jit-playground/blob/master/GRAM.md)
+
+Some cool numbers while testing fibonacci:
+```
+compiled for x64
+value in cell number 0: 165580141
+ * no-jit  time: 5.72286
+
+value in cell number 0: 165580141
+ *    jit  time: 0.399948
+```
 
