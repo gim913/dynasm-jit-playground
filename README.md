@@ -42,3 +42,10 @@ compiled for x64
 jit returend value: 4281082894 time: 0.111745 spd: 894.891 Mb/s
 c   returend value: 4281082894 time: 0.144186 spd: 693.548 Mb/s
 ```
+
+Example 3.
+----------
+
+Is implementation of *counter machine* and is much more complicated.
+You can find detailed description in GRAM.md
+
