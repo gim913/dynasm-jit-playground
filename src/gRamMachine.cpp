@@ -323,8 +323,9 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 }
 
 template<bool Use_Jit>
-void performTest(const char* mesg, const char *inputFile)
+void performTest(const char* mesg, size_t argc, const char **argv)
 {
+	const char* inputFile = argv[1];
 	parseInput(inputFile);
 
 	//dumpInstructions(ginstructions);
@@ -332,7 +333,17 @@ void performTest(const char* mesg, const char *inputFile)
 	maxMemAccess += 1;
 	machineMem = new uint64_t[maxMemAccess]();
 
-	machineMem[1] = 40;
+	for (size_t curArg=2; curArg < argc; ++curArg)
+	{
+		char* x = 0;
+		unsigned long v=strtoul(argv[curArg], &x, 10);
+		if (x == argv[curArg]) {
+			std::cout << "argument: " << argv[curArg] << " has not been recognized as a number\n";
+			return;
+		}
+
+		machineMem[curArg - 1] = v;
+	}
 
 	try {
 
@@ -353,7 +364,7 @@ void performTest(const char* mesg, const char *inputFile)
 
 }
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
 	std::ios_base::sync_with_stdio(false);
 	std::cout << "compiled for x64" << std::endl;
@@ -362,9 +373,9 @@ int main(int argc, char *argv[])
 		fatal("syntax: gram <input file>");
 	}
 
-	performTest<false>(" * no-jit ", argv[1]);
+	performTest<false>(" * no-jit ", argc, argv);
 
-	performTest<true >(" *    jit ", argv[1]);
+	performTest<true >(" *    jit ", argc, argv);
 
 	return 0;
 }
