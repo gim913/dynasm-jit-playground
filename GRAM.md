@@ -29,12 +29,12 @@ compiled for x64
 parsing input...............................................................  DONE
 value in cell number 0: 165580141
 program exited...
- * no-jit  time: 5.72286
+ * no-jit  time: 1.70075
 
 parsing input...............................................................  DONE
 value in cell number 0: 165580141
 program exited...
- *    jit  time: 0.399948
+ *    jit  time: 0.399607
 ```
 
 So you can see that, although JIT is quite dummy, speed up is over 10 times. 

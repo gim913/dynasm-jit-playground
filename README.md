@@ -53,9 +53,9 @@ Some cool numbers while testing fibonacci:
 ```
 compiled for x64
 value in cell number 0: 165580141
- * no-jit  time: 5.72286
+ * no-jit  time: 1.70075
 
 value in cell number 0: 165580141
- *    jit  time: 0.399948
+ *    jit  time: 0.399607
 ```
 
