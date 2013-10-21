@@ -8,7 +8,10 @@ The machine implemented here is actually variant of so called **counter machine*
 
 Implementation has following features:
  * program with numbered, consecutive instructions
- * memory cells from 0 to _n_, 0th cell is programs result
+ * memory cells from 0 to _n_,
+	+ memory is 0-initialized
+	+ 0th cell is programs result
+	+ cells 1-k are inputs (_k_ depends on function that the program computes)
  * 4 instructions:
 	+ **Z**ero(n) - put zero to _n_-th cell
 	+ **S**ucc(n) - increment value in _n_-th cell
