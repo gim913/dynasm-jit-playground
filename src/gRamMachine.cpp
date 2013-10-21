@@ -23,6 +23,9 @@
 	exit (0); \
 } while(0)
 
+// instruction type, op1, op2, op3, stats
+//space for bytecode
+Instr *ginstructions;
 size_t instructionsCount; // number of instructions
 size_t maxMemAccess;
 uint32_t lineNo;
@@ -39,9 +42,6 @@ int gatoi(char **buf, unsigned long *a) {
 	return (0);
 }
 
-// instruction type, op1, op2, op3, stats
-//space for bytecode
-Instr *ginstructions;
 
 int parseInstruction(Instr* instructions, char *s) {
 	char *k;
@@ -199,7 +199,7 @@ void dumpInstructions(Instr* instructions, int start /* = 0 */, int end /* = 0*/
 	}
 }
 
-int verbose = 0;
+static const int verbose = 0;
 
 #define printq(xxx) do { if(verbose) std::cerr << xxx; } while(0)
 
@@ -264,7 +264,7 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 						printq("let's generate hoties! " << gpc << " c("<<STATSCNT(gpc)<< ") to " << jmpEip << " c("<<STATSCNT(jmpEip)<<")\n");
 						da.prepare();
 
-						if ( dynasmGenerator(&da, instructions, gpc, jmpEip, machineMem, maxMemAccess) ) {
+						if ( dynasmGenerator(&da, instructions, instructionsCount, gpc, jmpEip, machineMem, maxMemAccess) ) {
 							void* fptr = da.build();
 							generatedFunctions.push_back( fptr );
 
@@ -287,15 +287,19 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 			}
 			break;
 		case Op_Generated:
-			int (*fptr)() = *((int (**)())instructions[gpc].op);
+			size_t (*fptr)() = *((size_t (**)())instructions[gpc].op);
 
 			printq("EIP("<< gpc <<") (");
 			printq(std::hex << fptr<<") then goto ");
 			printq(std::dec << GETOP(3, gpc)<<"\n");
 
-			fptr();
+			size_t endOfExec = fptr();
+			if (endOfExec >= n) {
+				gpc = endOfExec;
 
-			gpc = GETOP(3, gpc);
+			} else {
+				gpc = GETOP(3, gpc);
+			}
 
 			break;
 		}

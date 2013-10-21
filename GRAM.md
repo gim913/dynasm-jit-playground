@@ -17,7 +17,7 @@ Implementation has following features:
 	+ **S**ucc(n) - increment value in _n_-th cell
 	+ **T**ransfer(m,n) - copy value from _m_-th cell to _n_-th cell
 	+ **I**f(m,n, x) - if contents of _m_-th and _n_-th cells is equal *jump* to instruction number x
- * jumping outside of available instructions, should stop the execution (not handled by JIT yet)
+ * jumping outside of available instructions, should stop the execution ~~(not handled by JIT yet)~~
 
 As you can see **T** instruction isn't actually needed, and it could be implemented using *Z*, *S* and *I*.
 

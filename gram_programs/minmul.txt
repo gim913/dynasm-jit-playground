@@ -1,0 +1,19 @@
+this program takes 3 arguments a1 a2 a3 :
+it tries to return min(a1*a2, a3)       :
+it is quite stupid on purpose           :
+
+some data that will show difference jit vs interpreter             :
+gramMachine_x64.exe gram_programs\minmul.txt 10000 10000 100000001 :
+
+ 0: Z(6)              dummy
+ 1: Z(5)              j = 0
+ 2: I(2, 5, 100)      while (j < a2) {
+ 3: Z(4)                i = 0
+ 4: I(1, 4, 9)          while (i < a1) {
+ 5: I(0, 3, 100)          if sum == a3 break
+ 6: S(0)                  sum ++
+ 7: S(4)                  i++
+ 8: I(1, 1, 4)          }
+ 9: S(5)                j++
+10: I(1, 1, 2)        }
+11: Z(0)           just to see if jump @5 works ok

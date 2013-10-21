@@ -36,7 +36,7 @@ struct Instr {
 void dumpInstructions(Instr* instructions, int start = 0, int end = 0);
 int labelsCount = 1;
 
-bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, uint64_t* machineMem, size_t maxMemAccess)
+bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t instructionsCount, size_t start, size_t end, uint64_t* machineMem, size_t maxMemAccess)
 {
 	// dumpInstructions(instructions, start, end+1);
 
@@ -65,11 +65,13 @@ bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, ui
 			case Op_Jump:
 			case Op_Conditional_Jump:
 				dest = GETOP(3, locGpc);
-				if (dest < start || dest > end+1) {
-					printgen("fatal fail\n");
-					return false;
+				if (dest < instructionsCount) {
+					if (dest < start || dest > end+1) {
+						printgen("fatal fail\n");
+						return false;
+					}
+					labels[dest] = 0;
 				}
-				labels[dest] = 0;
 				locGpc++;
 				break;
 			case Op_Generated:
@@ -147,7 +149,8 @@ bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, ui
 		case Op_Jump:
 			dest = GETOP(3, locGpc);
 			printgen("..EIP("<< locGpc <<") goto "<<dest<<":"<< labels[dest] <<"\n");
-			if (dest == end+1) {
+			if (dest == end+1 || dest >= instructionsCount) {
+				| mov64 rax, dest
 				| jmp >3
 
 			} else {
@@ -166,7 +169,8 @@ bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, ui
 			| mov eax, op2
 			| cmp aword [rdi + rax*8], rcx
 			| jne >2
-			if (dest == end+1) {
+			if (dest == end+1 || dest >= instructionsCount) {
+				| mov64 rax, dest
 				| jmp >3
 
 			} else {
@@ -190,6 +194,9 @@ bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t start, size_t end, ui
 			//
 			| mov rax, aword [rsi + locGpc*sizeof(Instr) + 4]
 			| call rax
+			| mov64 rcx, instructionsCount
+			| cmp rax, rcx
+			| jae >3
 			if (dest == end+1) {
 				| jmp >3
 
