@@ -1,0 +1,41 @@
+this dummy program tries to break assumption     :
+made in JIT generator, return value should be 6  :
+
+ 0: I(0, 0, 14)    jump to initialization
+
+ 1: I(1, 1, 6)
+ 2: I(1, 1, 6)
+ 3: I(1, 1, 6)
+ 4: I(1, 1, 6)     * * * * *
+ 5: Z(0)
+ 6: T(0,20)
+ 7: S(0)
+ 8: I(0,11, 1)
+ 9: I(0,12, 2)
+10: I(0,13, 3)
+11: I(0,14, 4)
+12: I(0,15, 4)
+13: I(0,0,100)  end of program
+
+Z(11)       initialize cells from 11-15
+Z(12)
+Z(13)
+Z(14)
+Z(15)
+
+S(11)
+S(12)
+S(12)
+S(13)
+S(13)
+S(13)
+S(14)
+S(14)
+S(14)
+S(14)
+S(15)
+S(15)
+S(15)
+S(15)
+S(15)
+I(0,0, 1)     initialization done, jump back to 'start'
