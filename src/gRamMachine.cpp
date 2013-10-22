@@ -264,24 +264,38 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 						printq("let's generate hoties! " << gpc << " c("<<STATSCNT(gpc)<< ") to " << jmpEip << " c("<<STATSCNT(jmpEip)<<")\n");
 						da.prepare();
 
-						if ( dynasmGenerator(&da, instructions, instructionsCount, gpc, jmpEip, machineMem, maxMemAccess) ) {
+						size_t lesser = std::min<size_t>(gpc, jmpEip);
+						size_t bigger = std::max<size_t>(gpc, jmpEip);
+						if ( dynasmGenerator(&da, instructions, instructionsCount, lesser, bigger, machineMem, maxMemAccess) ) {
 							void* fptr = da.build();
 							generatedFunctions.push_back( fptr );
 
-							GETCD(gpc) = Op_Generated;
-							// now this one is ugly and note to good girls: you shouldn't do it,
-							// but I'm too lazy, to make union :p
-							*((size_t*)instructions[gpc].op) = (size_t)fptr;
+							if (jmpEip > gpc) {
+								GETCD(gpc) = Op_Generated;
+								// now this one is ugly and note to good girls: you shouldn't do it,
+								// but I'm too lazy, to make union :p
+								*((size_t*)instructions[gpc].op) = (size_t)fptr;
 
-							// my operands are 32b only, so let's cast this 
-							GETOP(3, gpc) = (uint32_t)(jmpEip+1);
+								// my operands are 32b only, so let's cast this 
+								GETOP(3, gpc) = (uint32_t)(jmpEip+1);
+
+							} else {
+								// I could merge if+else block, but keep in mind there's a subtle difference:
+								// in both cases, NEXT executed (by interpreter!) instruction will be at 'gpc', but
+								// in 'if', I've just put Op_Generated, there and that's what'll be executed
+								// in 'else' block it's put at 'jmpEip', but you actually don't know, if we'll ever reach that point
+								//     (so there's a chance, that the code we have just generated won't be executed even a single time)
+								GETCD(jmpEip) = Op_Generated;
+								*((size_t*)instructions[jmpEip].op) = (size_t)fptr;
+								GETOP(3, jmpEip) = (uint32_t)(gpc+1);
+							}
 						}
-
 						
 					} else {
 						// ignore for now?
 					}
 				}
+
 			} else {
 				gpc++;
 			}

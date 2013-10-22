@@ -115,6 +115,7 @@ bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t instructionsCount, si
 	{
 		it = labels.find(locGpc);
 		if (it != labels.end()) {
+			// tell dasm to generate PC label
 			|=>((*it).second):
 		}
 		switch (GETCD(locGpc))
