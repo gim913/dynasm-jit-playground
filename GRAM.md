@@ -222,6 +222,18 @@ be placed directly after *native* call instruction, e.g:
 
 ### epilogue ###
 
+What could be quite trivially improved, is concatenating subsequent **S** instructions into new instruction like `Op_Add`.
+This could be either done after parsing or while JITting. Other thing that could be interesting to add, is recognizing
+some usual 'patterns' during JITting and generating even better code for them e.g.:
+```
+ ..: assuming cell c has zero
+n  : I(b, c, n+4)
+n+1: S(c)
+n+2: S(x)
+n+4: I(y,y, n)
+```
+(add value of _b_-th cell to _x_-th cell)
+
 If you'd like to see how interpreter and generator works, inside interpreter there is global
 `verbose` variable, and inside generator, you'd have to change, following define:
 ```
