@@ -37,7 +37,12 @@ program exited...
  *    jit  time: 0.399607
 ```
 
-So you can see that, although JIT is quite dummy, speed up is over 10 times. 
+So you can see that, although JIT is quite dummy, speed up is over 4 times. 
+
+**UPDATE 1** jit handles "jumping outside of available instructions"
+
+**UPDATE 2** jit should handle ugly case when jump that triggered generation, goes forward
+changes in 807345b2c13cbad94c79f31378333dc4317cb801 does that.
 
 Interpreter
 -----------
@@ -98,7 +103,7 @@ Code generation
 
 ### prelude ###
 
-Let's look at [master](https://github.com/gim913/dynasm-jit-playground/blob/master/src/gRamMachine.cpp#L267), the generation happens in following call:
+Let's look at [pre-update version](https://github.com/gim913/dynasm-jit-playground/blob/a5d632936a0e9ef4c0f7b0d62be0d96fdebfdfed/src/gRamMachine.cpp#L267), the generation happens in following call:
 
 ```c
 dynasmGenerator(&da, instructions, gpc, jmpEip, machineMem, maxMemAccess)
@@ -112,13 +117,13 @@ Before we look at generator itself, let's see what happens if generation succeed
  * original operands 0,1 are overwritten with a pointer to generated function
  * original operand 2 is overwritten with *length* in instructions, ot generated block
 
-Now in [interpeter part](https://github.com/gim913/dynasm-jit-playground/blob/master/src/gRamMachine.cpp#L289) if we stumble upon `Op_Generated` opcode, I do exactly what's needed:
+Now in [interpeter part](https://github.com/gim913/dynasm-jit-playground/blob/a5d632936a0e9ef4c0f7b0d62be0d96fdebfdfed/src/gRamMachine.cpp#L289) if we stumble upon `Op_Generated` opcode, I do exactly what's needed:
  * get the pointer and execute generated code
  * change current instruction pointer accordingly
 
 ### generator ###
 
-Now we can head to generator itself which is in [gram_x64.dasc](https://github.com/gim913/dynasm-jit-playground/blob/master/src/gram_x64.dasc).
+Now we can head to generator itself which is in [gram_x64.dasc](https://github.com/gim913/dynasm-jit-playground/blob/a5d632936a0e9ef4c0f7b0d62be0d96fdebfdfed/src/gram_x64.dasc).
 
 Generator works in two passes:
  * first pass:
@@ -175,11 +180,14 @@ if (dest == end+1) {
 ```
 
 Reasoning is as follows:
- 1. I know that jump at *end* goes **UP** (I've written about it at the end of previous section)
+ 1. ~~I know that jump at *end* goes **UP** (I've written about it at the end of previous section)~~
+	a. this is actually irrelevant
  2. I'm NOT generating code for pieces, that have jumps outside of (start, end+1)
- 3. so, if there's jump to `end+1` somewhere from within the code it means it's "end-of-loop"
+ 3. if there's jump to `end+1` somewhere from within the code it means it's ~~"end-of-loop"~~
+	a. either "end-of-loop" as in ascii above
+	b. or it is jump outside of currently generated block, so we're finished anyway
 
-So in case of jump to "end-of-loop", I simply generate jmp to *end of generated function*,
+So in case of jump to `end+1`, I simply generate jmp to *end of generated function*,
 and otherwise, I generate *PC jump*, to one of the labels, collected during **pass 1**.
 
 There's difference in handling of `Op_Generated`, which loows like this:
