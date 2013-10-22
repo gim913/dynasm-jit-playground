@@ -70,7 +70,9 @@ bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t instructionsCount, si
 						printgen("fatal fail\n");
 						return false;
 					}
-					labels[dest] = 0;
+					if (dest != end+1) {
+						labels[dest] = 0;
+					}
 				}
 				locGpc++;
 				break;
@@ -80,7 +82,9 @@ bool dynasmGenerator(Dst_DECL, Instr* instructions, size_t instructionsCount, si
 					printgen("fatal fail\n");
 					return false;
 				}
-				labels[dest] = 0;
+				if (dest != end+1) {
+					labels[dest] = 0;
+				}
 				locGpc = dest;
 				break;
 		}
