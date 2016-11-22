@@ -139,11 +139,11 @@ int parseInstruction(Instr* instructions, char *s) {
 		set_operand(1, 0);
 		set_operand(2, 0);
 		// leave jump destination untouched
-		//set_operand(3, ); 
+		//set_operand(3, );
 	}
 
 	k++;
-	std::cerr << ".."; 
+	std::cerr << "..";
 	push_instruction();
 	return 0;
 }
@@ -256,7 +256,7 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 			if (GETCD(gpc) == Op_Jump || machineMem[GETOP(2, gpc)] == machineMem[GETOP(1, gpc)]) {
 				size_t jmpEip = gpc;
 				gpc = GETOP(3, gpc);
-				
+
 				// it's sooooo hot here...
 				if (Use_Jit && STATSCNT(gpc) == 4) {
 					// if we were at 'jump destination' more times than at jump itself
@@ -277,7 +277,7 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 								// but I'm too lazy, to make union :p
 								*((size_t*)instructions[gpc].op) = (size_t)fptr;
 
-								// my operands are 32b only, so let's cast this 
+								// my operands are 32b only, so let's cast this
 								GETOP(3, gpc) = (uint32_t)(jmpEip+1);
 
 							} else {
@@ -291,7 +291,7 @@ void executeInstructions(Instr* instructions, size_t n, uint64_t* machineMem, si
 								GETOP(3, jmpEip) = (uint32_t)(gpc+1);
 							}
 						}
-						
+
 					} else {
 						// ignore for now?
 					}
