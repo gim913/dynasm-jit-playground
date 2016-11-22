@@ -4,6 +4,7 @@
 
 #include "gram_bc.h"
 
+#include <algorithm>
 #include <iostream>
 #include <iomanip>
 #include <list>

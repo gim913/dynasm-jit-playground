@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 	std::cout << "compiled for x86" << std::endl;
 #endif
 
-	const size_t dataSize = 100*1024*1024;
+	const size_t dataSize = 256*1024*1024;
 	void* dataBlock=malloc(dataSize);
 	char* temp=(char*)dataBlock;
 	uint64_t x = 0x416947;
@@ -65,9 +65,10 @@ int main(int argc, char *argv[]) {
 
 	try {
 		DynAsm da(actions, GLOB__MAX);
+		da.prepare();
 
 		dynasmGenerator(&da);
-  
+
 		uint32_t (__fastcall * fptr)(void*,size_t) = reinterpret_cast<uint32_t(__fastcall *)(void*, size_t)>( da.build() );
 
 		Timer::init();
@@ -77,7 +78,7 @@ int main(int argc, char *argv[]) {
 		auto t2 = Timer::tick();
 		uint32_t ret = fptr(dataBlock, dataSize);
 		auto t3 = Timer::tick();
-	
+
 		t3 -= t2;
 		t2 -= t1;
 		std::cout << "jit returend value: " << ret << " time: " << t3 << " spd: " << (dataSize/t3 / 1024 / 1024) << " Mb/s" << std::endl;

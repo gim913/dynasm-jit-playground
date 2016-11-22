@@ -23,14 +23,15 @@ int main(int argc, char *argv[]) {
 
 	try {
 		DynAsm da(actions);
+		da.prepare();
 
 		dynasmGenerator(&da, num);
-  
+
 		int (*fptr)() = reinterpret_cast<int(*)()>( da.build() );
 
 		// Call the JIT-ted function.
 		int ret = fptr();
-	
+
 		std::cout << "code returend value: " << ret << std::endl;
 		std::cout << "last pc val: " << da.getPc(0) << std::endl;
 		da.destroy(fptr);

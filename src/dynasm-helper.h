@@ -5,8 +5,6 @@
 #define Dst       state
 #define Dst_DECL  DynAsm *Dst
 #define Dst_REF   (state->m_state)
-// commented as dasm_put and Co. will reside in dynasm-helper.cpp now
-//#define DASM_FDEF static
 
 struct dasm_State;
 
