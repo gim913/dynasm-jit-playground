@@ -1,7 +1,7 @@
 @echo off
-set DYNASMDIR=/projects/LuaJIT-2.0.2/dynasm
+set DYNASMDIR=/tools/LuaJIT-2.0.4/dynasm
 set DASMFLAGS=-D WIN -D JIT -D FFI
-set LUA=/projects/LuaJIT-2.0.2/src/luajit.exe
+set LUA=/tools/LuaJIT-2.0.4/src/luajit.exe
 set OBJDIR=../obj/
 set CFLAGS=/nologo /c /Zi /EHsc /MD /O2 /W3 /I%DYNASMDIR% /Tp
 set LDFLAGS=/nologo /DEBUG
